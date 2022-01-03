@@ -6,8 +6,8 @@ language_tabs: # must be one of https://git.io/vQNgJ
   - javascript
 
 toc_footers:
-  - <a href='#'>Sign Up for a Developer Key</a>
-  - <a href='https://github.com/slatedocs/slate'>Documentation Powered by Slate</a>
+- <a href='https://app.payforme.io/dashboard' target='_blank'>Sign Up for a Developer Key</a>
+- <a href='https://payforme.io' target='_blank'>Go to PayForMe Homepage</a>
 
 includes:
   - errors
@@ -37,8 +37,7 @@ Your API keys must be kept secret because they carry many privileges. Do not exp
 Your live api key is prefixed with `api_live` and your test mode api key is prefixed with `api_test`. For e.g. a full key will be similar to `api_live_123456abcdef`.
 
 
-HTTPS Bearer Auth is used for authentication. Provide your API key as the Bearer token. 
-If you need to authenticate via bearer auth (e.g., for a cross-origin request), use `-H "Authorization: Bearer api_live_123456abcdef"` 
+HTTPS Bearer Auth is used for authentication. Provide your API key as the Bearer token. For example  `-H "Authorization: Bearer api_live_123456abcdef"` 
 
 All API requests must be made over HTTPS. Calls made over plain HTTP will fail. API requests without authentication will also fail.
 
@@ -57,16 +56,16 @@ PayForMe API expects for the API key to be included in all API requests to the s
 
 
 <aside class="notice">
-You must replace <code>api_live_123456abcdef</code> with your personal API key.
+Don't forget to replace <code>api_live_123456abcdef</code> with your personal API key.
 </aside>
 
 # Checkout Page
 
-The checkout page allows the buyer to include a shipping address and finalize the checkout process by generating a payment link themselves. The payment link can then be shared with anyone to pay.
+Merchants can redirect customers to the checkout page to complete the checkout/payment process. This process allows the buyer to update their shipping information and generate a payment link that can be shared with anyone to pay.
 
 ## Redirect to the Checkout Page
 
-This endpoint to redirects to the checkout page on the brower. Call this endpoint for exampe when the user clicks on a Buy or Checkout Button on your ecommerce website.
+This endpoint redirects the customer to the checkout page on the browser. A good time to call this endpoint is when a customer clicks on a Buy or Checkout Button on an ecommerce website.
 
 
 ```shell
@@ -81,7 +80,7 @@ let api = kittn.authorize('YOUR_API_KEY');
 let kittens = api.kittens.get();
 ```
 
-> The above command redirects to the checkout page URL smiliar to this:
+> The above command redirects to a checkout page URL that looks smiliar to this:
 
 ```
 https://api.payforme.io/checkout-page?ref=<token>
@@ -95,11 +94,13 @@ https://api.payforme.io/checkout-page?ref=<token>
 
 Parameter | Default | Description
 --------- | ------- | -----------
-merchant_order_id | default | If set uniquely identifies the order in the merchant's system.
-needs_shipping_address | true | If set to false, buyer's shipping address will not be required to fulfil the order.
-shipping_address | undefined | required unless `needs_shipping_address` is set to false.
-amount | n/a | required field must be set to determine the amount to charge the purchasing customer. 
+merchant_order_id | "default" | If set uniquely identifies the order in the merchant's system.
+needs_shipping_address | true | If set to false, buyer's shipping address won't be required to fulfil the order.
+shipping_address | undefined | Optional if  `needs_shipping_address` is set to false. 
+amount | undefined | Required - must be set to determine the amount to charge the purchasing customer. 
 line_items | undefined | Optional - if set displays a breakdown of the items being purchased. This is used to display items only. The API caller is responsible for making sure line_items add up to the  `amount` charged. 
+redirect_to_checkout_page | true | Set to false to return the checkout page URL instead of redirecting to it.
+meta_data | undefined | Optional - If set is returned back exactly in PayForMe Order data. It can be used to store additional info needed by the merchant.
 
 <aside class="success">
 Remember — Always keep your API keys secret!
@@ -107,7 +108,7 @@ Remember — Always keep your API keys secret!
 
 ## Get the Checkout Page URL
 
-Gets the checkout page URL instead of redirecting to it. 
+Gets the checkout page URL instead of redirecting to it. Once you have the URL, the customer needs needs to visit the URL in a web browser to complete the checkout process. The checkout URL is not the same as a <a href='#payment-link'>Payment Link</a>. 
 
 ```shell
 curl "https://api.payforme.io/checkoutPage/abc" \
@@ -125,66 +126,33 @@ let max = api.kittens.get('abc');
 
 ```json
 {
-  "id": abc,
-  "object": checkout-page,
+  "id": "abc",
+  "object": "checkout-page",
   "url": "https://api.payforme.io/checkout-page?ref=abc",
   "expires": 123456789076
 }
 ```
 
-<aside class="warning">Inside HTML code blocks like this one, you can't use Markdown, so use <code>&lt;code&gt;</code> blocks to denote code.</aside>
+<aside class="warning">Uses the same API for Checkout Page Redirect. However you need to set "redirect_to_checkout_page" param to false when calling the checkoutPage API.</aside>
 
 ### HTTP Request
 
-`GET https://api.payforme.io/checkoutPage/<ID>`
+`POST https://api.payforme.io/checkoutPage`
 
-### URL Parameters
+### Body Parameters
 
-Parameter | Description
---------- | -----------
-ID | The ID of the checkout order to retrieve
-
-## Disable a Checkout Order
-
-Disables or invalidates a specified checkout order.
+Parameter | Default | Description
+--------- | ------- | -----------
+redirect_to_checkout_page | true | Set to false to return the checkout page URL instead of redirecting to it.
 
 
-```shell
-curl "https://api.payforme.io/<payforme_order_id>" \
-  -X DELETE \
-  -H "Authorization: Bearer YOUR_API_KEY"
-```
-
-```javascript
-const kittn = require('kittn');
-
-let api = kittn.authorize('YOUR_API_KEY');
-let max = api.kittens.delete(2);
-```
-
-> The above command returns JSON structured like this:
-
-```json
-{
-  "id": 2,
-  "deleted" : ":("
-}
-```
-
-
-### HTTP Request
-
-`DELETE https://api.payforme.io/checkoutPage/<ID>`
-
-### URL Parameters
-
-Parameter | Description
---------- | -----------
-ID | The ID of the PayForMe order to invalidate
 
 # Payment Link
 
-The payment link is a URL that allows allows anyone with the link to pay. The Payment Link contains details about the order such as the items being purchased and the buyer's shipping info. Anyone with the payment link can pay on behalf of the buyer. Once payment is received, the merchant is notified to fulfill the order. The buyer and payer also get notified.
+The payment link is a URL that allows anyone with the link to pay. The Payment Link contains details about the order such as the items being purchased and the buyer's shipping info. The buyer's shipping info is kept private and only shared with the merchant to fulfill the order. 
+
+
+Anyone with the payment link can pay on behalf of the buyer. Once payment is received, the merchant is notified to fulfill the order. The buyer and payer also get notified.
 
 ## Create a Payment Link
 
@@ -199,7 +167,7 @@ curl "https://api.payforme.io/paymentLink" \
 
 ```json
 {
-  "id": abcdef,
+  "id": "abcdef",
   "url": "https://pay.payforme.io/abcdef",
   "expires": 123456789076
 }
@@ -220,6 +188,7 @@ needs_shipping_address | true | If set to false, buyer's shipping address will n
 shipping_address | undefined | required unless `needs_shipping_address` is set to false.
 amount | n/a | required field must be set to determine the amount to charge the purchasing customer. 
 line_items | undefined | Optional - if set displays a breakdown of the items being purchased. This is used to display items only. It helps the payer review items being purchased. used to . The API caller is responsible for making sure line_items add up to the  `amount` charged. 
+meta_data | undefined | Optional - If set is returned back exactly in PayForMe Order data. It can be used to store additional info needed by the merchant.
 
 <aside class="success">
 Remember — Always keep your API keys secret!
